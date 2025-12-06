@@ -79,7 +79,8 @@ export const useAssets = create<AssetStore>((set, get) => ({
     
     set({ loading: true, initialized: true });
     
-    const q = query(collection(db, "zetubridge_assets"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "zetubridge_assets"));
+    // const q = query(collection(db, "zetubridge_assets"), orderBy("createdAt", "desc"));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const assets = snapshot.docs.map(doc => ({
