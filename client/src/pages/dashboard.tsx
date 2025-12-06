@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useAssets, Asset, AssetType } from "@/lib/mock-firebase";
+import { useAssets, Asset, AssetType } from "@/lib/firebase";
 import DashboardLayout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger 
@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { 
-  Search, Plus, MoreVertical, ExternalLink, Copy, Image as ImageIcon, Video, Link as LinkIcon, Pencil, Trash2, Check
+  Search, Plus, MoreVertical, ExternalLink, Copy, Image as ImageIcon, Video, Link as LinkIcon, Pencil, Trash2, Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -31,12 +31,18 @@ const assetSchema = z.object({
 });
 
 export default function DashboardPage() {
-  const { assets, addAsset, updateAsset, deleteAsset } = useAssets();
+  const { assets, addAsset, updateAsset, deleteAsset, initialize, loading } = useAssets();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<AssetType | "all">("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+
+  // Initialize Firebase listener on mount
+  useEffect(() => {
+    const unsubscribe = initialize();
+    return () => unsubscribe();
+  }, [initialize]);
 
   const filteredAssets = assets.filter(asset => {
     const matchesSearch = asset.name.toLowerCase().includes(search.toLowerCase());
@@ -51,6 +57,17 @@ export default function DashboardPage() {
       title: "Link Copied",
       description: "The ZetuBridge link has been copied to your clipboard.",
     });
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      if (confirm("Are you sure you want to delete this asset?")) {
+        await deleteAsset(id);
+        toast({ title: "Asset Deleted", description: "The asset has been removed." });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete asset.", variant: "destructive" });
+    }
   };
 
   return (
@@ -89,7 +106,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {filteredAssets.length === 0 ? (
+      {loading && assets.length === 0 ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : filteredAssets.length === 0 ? (
         <div className="text-center py-20 border-2 border-dashed rounded-xl bg-muted/10">
           <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Search className="h-6 w-6 text-muted-foreground" />
@@ -107,7 +128,7 @@ export default function DashboardPage() {
               asset={asset} 
               onCopy={() => copyToClipboard(asset.id)}
               onEdit={() => { setEditingAsset(asset); setIsAddOpen(true); }}
-              onDelete={() => deleteAsset(asset.id)}
+              onDelete={() => handleDelete(asset.id)}
             />
           ))}
         </div>
@@ -117,15 +138,20 @@ export default function DashboardPage() {
         open={isAddOpen} 
         onOpenChange={setIsAddOpen}
         initialData={editingAsset}
-        onSubmit={(data) => {
-          if (editingAsset) {
-            updateAsset(editingAsset.id, data);
-            toast({ title: "Asset Updated", description: "Changes have been saved successfully." });
-          } else {
-            addAsset(data);
-            toast({ title: "Asset Created", description: "New asset has been added to your library." });
+        onSubmit={async (data) => {
+          try {
+            if (editingAsset) {
+              await updateAsset(editingAsset.id, data);
+              toast({ title: "Asset Updated", description: "Changes have been saved successfully." });
+            } else {
+              await addAsset(data);
+              toast({ title: "Asset Created", description: "New asset has been added to your library." });
+            }
+            setIsAddOpen(false);
+          } catch (error) {
+            console.error(error);
+            toast({ title: "Error", description: "Failed to save asset.", variant: "destructive" });
           }
-          setIsAddOpen(false);
         }}
       />
     </DashboardLayout>
@@ -197,7 +223,7 @@ function AssetDialog({ open, onOpenChange, initialData, onSubmit }: {
   open: boolean, 
   onOpenChange: (open: boolean) => void,
   initialData: Asset | null,
-  onSubmit: (data: z.infer<typeof assetSchema>) => void
+  onSubmit: (data: z.infer<typeof assetSchema>) => Promise<void>
 }) {
   const form = useForm<z.infer<typeof assetSchema>>({
     resolver: zodResolver(assetSchema),
@@ -207,6 +233,8 @@ function AssetDialog({ open, onOpenChange, initialData, onSubmit }: {
       originalUrl: "",
     },
   });
+  
+  const [loading, setLoading] = useState(false);
 
   // Reset form when opening/closing or changing initialData
   useEffect(() => {
@@ -219,8 +247,10 @@ function AssetDialog({ open, onOpenChange, initialData, onSubmit }: {
     }
   }, [open, initialData, form]);
 
-  const handleSubmit = (values: z.infer<typeof assetSchema>) => {
-    onSubmit(values);
+  const handleSubmit = async (values: z.infer<typeof assetSchema>) => {
+    setLoading(true);
+    await onSubmit(values);
+    setLoading(false);
   };
 
   return (
@@ -283,7 +313,8 @@ function AssetDialog({ open, onOpenChange, initialData, onSubmit }: {
               )}
             />
             <DialogFooter className="mt-6">
-              <Button type="submit" className="w-full sm:w-auto">
+              <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {initialData ? "Save Changes" : "Create Asset"}
               </Button>
             </DialogFooter>

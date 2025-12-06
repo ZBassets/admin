@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useAssets, Asset } from "@/lib/mock-firebase";
+import { fetchAssetById, Asset } from "@/lib/firebase"; // Use direct fetcher
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ViewAssetPage() {
   const [location] = useLocation();
-  const { getAsset } = useAssets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [asset, setAsset] = useState<Asset | undefined>(undefined);
+  const [asset, setAsset] = useState<Asset | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -21,16 +20,15 @@ export default function ViewAssetPage() {
       return;
     }
 
-    const foundAsset = getAsset(id);
-    
-    if (!foundAsset) {
-      setError("Asset not found");
-      setLoading(false);
-      return;
-    }
+    async function loadAsset() {
+      const foundAsset = await fetchAssetById(id!);
+      
+      if (!foundAsset) {
+        setError("Asset not found");
+        setLoading(false);
+        return;
+      }
 
-    // Simulate network delay for realism
-    setTimeout(() => {
       setAsset(foundAsset);
       setLoading(false);
 
@@ -38,9 +36,11 @@ export default function ViewAssetPage() {
       if (foundAsset.type === "link") {
         window.location.href = foundAsset.originalUrl;
       }
-    }, 800);
+    }
 
-  }, [getAsset]);
+    loadAsset();
+
+  }, []);
 
   if (loading) {
     return (
