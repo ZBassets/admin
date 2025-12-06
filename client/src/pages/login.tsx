@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -38,16 +39,24 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsSubmitting(true);
+    setLoginError(null);
     try {
       await login(values.email, values.password);
       // Navigation handled by useEffect
     } catch (error: any) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "Invalid credentials. Please try again.",
-      });
+      // Format error message professionally
+      let errorMessage = "Authentication failed. Please verify your credentials.";
+      
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = "The credentials provided do not match our records. Please verify your email and password.";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Access temporarily suspended due to multiple failed attempts. Please try again later.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setLoginError(errorMessage);
       setIsSubmitting(false);
     }
   }
@@ -133,6 +142,21 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
+
+                {loginError && (
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex gap-3">
+                      <div className="h-5 w-5 rounded-full bg-red-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-red-400">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-red-200 font-medium leading-relaxed">
+                        {loginError}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <Button 
                   type="submit" 
