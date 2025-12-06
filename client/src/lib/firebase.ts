@@ -79,7 +79,7 @@ export const useAssets = create<AssetStore>((set, get) => ({
     
     set({ loading: true, initialized: true });
     
-    const q = query(collection(db, "assets"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "zetubridge_assets"), orderBy("createdAt", "desc"));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const assets = snapshot.docs.map(doc => ({
@@ -99,19 +99,19 @@ export const useAssets = create<AssetStore>((set, get) => ({
   },
 
   addAsset: async (asset) => {
-    await addDoc(collection(db, "assets"), {
+    await addDoc(collection(db, "zetubridge_assets"), {
       ...asset,
       createdAt: serverTimestamp()
     });
   },
 
   updateAsset: async (id, updates) => {
-    const docRef = doc(db, "assets", id);
+    const docRef = doc(db, "zetubridge_assets", id);
     await updateDoc(docRef, updates);
   },
 
   deleteAsset: async (id) => {
-    await deleteDoc(doc(db, "assets", id));
+    await deleteDoc(doc(db, "zetubridge_assets", id));
   },
 
   getAsset: (id) => get().assets.find((a) => a.id === id),
@@ -120,7 +120,7 @@ export const useAssets = create<AssetStore>((set, get) => ({
 // --- Standalone Fetcher for Public View ---
 export async function fetchAssetById(id: string): Promise<Asset | null> {
   try {
-    const docRef = doc(db, "assets", id);
+    const docRef = doc(db, "zetubridge_assets", id);
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
