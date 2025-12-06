@@ -1,0 +1,200 @@
+TITLE: Build “ZetuBridge Assets” –  Admin Asset Manager
+
+PROMPT:
+I want you to build a full web application called ZetuBridge Assets using HTML, CSS, JavaScript, and Firebase (Authentication + Firestore + Storage).
+This system is an Admin-Only Asset Management System that will generate clean, stable URLs that I can insert inside my Android Studio app.
+
+⭐ SYSTEM OBJECTIVE
+
+I am building an Android app that uses image URLs, video URLs, and website URLs.
+I want this web system to allow me (admin only) to:
+
+1. Upload or register links (image URLs, video URLs, external website URLs)
+
+
+2. Assign each link a name
+
+
+3. Choose asset type:
+
+Image (for embedding in <img> tags)
+
+Video (for embedding in <iframe> or <video> tags)
+
+External Link (for redirecting the user to another website)
+
+
+
+4. Have the system generate a short internal link, like:
+https://zetubridge-assets.web.app/view?id=XXXXX
+
+
+5. When that link is opened, the system should:
+
+Display the image if it’s an image
+
+Embed the video if it’s a video
+
+Redirect to external site if the asset type is “link”
+
+
+
+6. If the original URL fails or I want to change it later, I should simply edit it in the dashboard, and the generated ZetuBridge link should continue working.
+
+
+
+This will allow me to update all my Android app assets without updating the Android app code.
+
+
+---
+
+⭐ FEATURES REQUIRED
+
+1. Authentication (Firebase Auth)
+
+Admin-only login page
+
+Email + password login
+
+Deny access to dashboard unless authenticated
+
+Logout button
+
+
+2. Dashboard Pages
+
+A. Add New Asset
+
+Fields:
+
+Asset Name
+
+Asset Type (select: Image, Video, External Link)
+
+URL Field (paste the original link)
+
+Submit → store in Firestore and generate a unique ID
+
+
+B. View/Search Assets
+
+Search bar (search by name)
+
+Filter options:
+
+All
+
+Image Assets
+
+Video Assets
+
+External Link Assets
+
+
+Each entry should show:
+
+Name
+
+Original URL
+
+Generated “ZetuBridge View Link”
+
+Edit button
+
+Delete button
+
+
+
+C. Edit Asset
+
+Change name
+
+Change URL
+
+Change type
+
+Save updates (view link must remain unchanged)
+
+
+
+---
+
+⭐ VIEW ENDPOINT
+
+Create a public route:
+view.html?id=UNIQUE_ID
+
+This page should:
+
+Fetch asset by ID
+
+If type = image, show <img src="URL">
+
+If type = video, embed using <iframe src="URL">
+
+If type = external link, redirect using window.location.href = URL
+
+
+
+---
+
+⭐ TECHNOLOGY REQUIREMENTS
+
+Use Firebase Hosting
+
+Firebase Auth
+
+Firestore for storing asset metadata
+
+Clean UI (use TailwindCSS)
+
+Code must be structured and professional
+
+Use modules (type="module")
+
+Include comments so I can understand and modify it later
+
+
+
+---
+
+⭐ ADDITIONAL REQUIREMENTS
+
+Make sure ALL URLs work in raw form to be used inside Android <img>, <iframe>, and <a> tags.
+
+Make it easy to copy generated view links.
+
+Make the dashboard responsive and easy to use.
+
+Provide full HTML, CSS, JS, and Firebase config setup in the code output.
+
+
+
+---
+
+⭐ OUTPUT FORMAT
+
+Provide:
+
+1. /index.html – Login Page
+
+
+2. /dashboard.html – Asset Manager
+
+
+3. /view.html – Asset Viewer
+
+
+4. main.js – handles Firebase auth + dashboard functions
+
+
+5. view.js – handles view logic
+
+
+6. firebase.js – Firebase config + initialization
+
+
+7. Tailwind CSS integration
+
+
+8. Instructions for Firebase Hosting deployment
