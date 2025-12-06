@@ -65,8 +65,16 @@ export default function DashboardPage() {
         await deleteAsset(id);
         toast({ title: "Asset Deleted", description: "The asset has been removed." });
       }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete asset.", variant: "destructive" });
+    } catch (error: any) {
+      if (error.code === 'permission-denied') {
+        toast({
+          variant: "destructive",
+          title: "Permission Denied",
+          description: "You need to update your Firestore Security Rules to delete assets.",
+        });
+      } else {
+        toast({ title: "Error", description: "Failed to delete asset.", variant: "destructive" });
+      }
     }
   };
 
@@ -148,9 +156,18 @@ export default function DashboardPage() {
               toast({ title: "Asset Created", description: "New asset has been added to your library." });
             }
             setIsAddOpen(false);
-          } catch (error) {
+          } catch (error: any) {
             console.error(error);
-            toast({ title: "Error", description: "Failed to save asset.", variant: "destructive" });
+            if (error.code === 'permission-denied') {
+              toast({
+                variant: "destructive",
+                title: "Permission Denied",
+                description: "You need to update your Firestore Security Rules. Please check the chat for the rules to copy.",
+                duration: 10000,
+              });
+            } else {
+              toast({ title: "Error", description: "Failed to save asset.", variant: "destructive" });
+            }
           }
         }}
       />
