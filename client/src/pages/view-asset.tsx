@@ -44,13 +44,9 @@ export default function ViewAssetPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center animate-pulse">
-            <div className="h-6 w-6 bg-primary rounded-full"></div>
-          </div>
-          <p className="text-muted-foreground font-medium animate-pulse">Resolving asset...</p>
-        </div>
+      <div className="fixed inset-0 w-full h-full bg-black flex items-center justify-center">
+        {/* Minimal loader for embedding */}
+        <div className="h-8 w-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -80,14 +76,14 @@ export default function ViewAssetPage() {
     );
   }
 
-  // Render content centered in viewport
+  // Render content centered in viewport with NO MARGINS for iframe embedding
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-0 m-0 overflow-hidden">
+    <div className="fixed inset-0 w-full h-full bg-black m-0 p-0 flex items-center justify-center overflow-hidden">
       {asset.type === "image" && (
         <img 
           src={asset.originalUrl} 
           alt={asset.name} 
-          className="max-w-full max-h-screen object-contain"
+          className="w-full h-full object-contain block"
         />
       )}
       
@@ -95,7 +91,7 @@ export default function ViewAssetPage() {
         <iframe 
           src={asset.originalUrl} 
           title={asset.name}
-          className="w-full h-screen border-0"
+          className="w-full h-full border-0 block"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
           allowFullScreen
         ></iframe>
